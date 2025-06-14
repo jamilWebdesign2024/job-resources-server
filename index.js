@@ -9,38 +9,35 @@ require('dotenv').config()
 
 // middleware
 
-app.use(cors({
-    origin: ['http://localhost:5173'],
-    credentials: true
-}));
+app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
+
 
 const logger = (req, res, next)=>{
     console.log('inside the logger middleware');
     next();
 }
 
-const verifyToken = (req, res, next)=>{
-    const token = req?.cookies?.token;
-    console.log('cookie in the middleware', token);
-    if(!token){
-        return res.status(401).send({message: 'unauthorized access'})
-    }
+// const verifyToken = (req, res, next)=>{
+//     const token = req?.cookies?.token;
+//     console.log('cookie in the middleware', token);
+//     if(!token){
+//         return res.status(401).send({message: 'unauthorized access'})
+//     }
 
-    // veriry token
-    jwt.verify(token, process.env.JWT_ACCESS_SECRET, (err, docoded)=>{
-        if(err){
-            return res.status(401).send({message: 'unauthorized access'})
-        }
-        req.docoded = decoded;
-        next();
-    })
+//     // veriry token
+//     jwt.verify(token, process.env.JWT_ACCESS_SECRET, (err, decoded)=>{
+//         if(err){
+//             return res.status(401).send({message: 'unauthorized access'})
+//         }
+//         req.decoded = decoded;
+//         next();
+//     })
 
 
 
     
-}
+// }
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.1gwegko.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -65,20 +62,13 @@ async function run() {
 
 
     // jwt token related api
-    app.post('/jwt', async(req, res)=>{
-        const userData = req.body;
-        const token = jwt.sign(userData, process.env.JWT_ACCESS_SECRET, {expiresIn: '1d'})
+   app.post('/jwt', async(req, res)=>{
+        const userInfo=req.body;
 
-    //   set token in the cookies 
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: false,
-        })
-       
-        res.send({success: true})
-    })
+        const token = jwt.sign(userInfo, process.env.JWT_ACCESS_SECRET, {expiresIn: '2h', })
+   })
 
-
+xz
 
 
 
@@ -139,13 +129,8 @@ async function run() {
 
     //  job applications related apis
 
-    app.get('/applications', logger, verifyToken, async(req, res)=>{
+    app.get('/applications', logger, async(req, res)=>{
         const email =req.query.email;
-
-        // console.log('inside applications api', req.cookies);
-        if(email !== req.docoded.email){
-            return res.status(403).send({message: 'forbidden access'})
-        }
         
 
         const query = {
